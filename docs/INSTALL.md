@@ -54,10 +54,13 @@ format EEex mods read), and copies the IEX options screen into `override/`.
 
 ### EEex mods that check for EEex at install time
 
-IEX runs EEex mods' Lua unchanged, but some mods check for EEex in their installer (`MOD_IS_INSTALLED ~EEex.tp2~`,
-`FILE_EXISTS ~override/M___EEex.lua~`, ...) and refuse to install without it. These checks must accept IEX too.
-[MOD_COMPAT.md](MOD_COMPAT.md#install-time-checks) lists them and the change each needs. The Candlekeep mod manager
-(coming) is meant to handle this for the mods in its catalog.
+Since 0.4.1, IEX answers most of these checks itself (`MOD_IS_INSTALLED ~EEex.tp2~`,
+`FILE_EXISTS ~override/M___EEex.lua~`, ...): core also installs an alias, listed in `WeiDU.log` as
+`~EEEX/EEEX.TP2~ #0 #0 // IEX compatibility alias`. It contains no EEex code. Install IEX before those mods.
+
+- Game with an older IEX: install `IEX/IEX.tp2` component 3 to add the alias, then install the mods.
+- An `EEex` folder from a real EEex: the alias is skipped with a warning. Delete that folder, then install component 3.
+- A few checks still need an edit: see [MOD_COMPAT.md](MOD_COMPAT.md#install-time-checks).
 
 ## Install with Candlekeep (coming)
 

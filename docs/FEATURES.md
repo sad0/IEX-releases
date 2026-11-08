@@ -108,6 +108,26 @@ Limit: WeiDU's `ADD_SPELL` still fills slots 01-50 only.
 
 Tested with IEX on Windows; Linux uses the same native switch.
 
+## Unlimited kits
+
+The engine keeps the class abilities table (CLAB) of only 256 kits: a single-class kit on `KITLIST.2DA` row 257 or
+higher crashes the game or gets no or wrong abilities at character creation, level-up, `AddKit` and dual-class.
+With IEX, single-class kits work up to row 16383 (`KIT.IDS` 0x7FFF). True multiclass kits never had the limit.
+
+- On by default (`kitLimit`), Windows and Linux. No save format change.
+- `Baldur.lua` `SetPrivateProfileString('IEX','Unlimited Kits','0')` turns it off (restart needed; also on the
+  Engine Fixes tab of the IEX options screen). Environment variable `IEX_KIT_LIMIT=0` for tests.
+- Installing kits past row 256: WeiDU's own `ADD_KIT` refuses them (it expects GemRB or ToBEx, and stops at 1280).
+  Kit mods use `IEX/lib/iex_kits.tpa` and Argent77's `ADD_KIT_EX` instead
+  ([MOD_COMPAT.md](MOD_COMPAT.md#kit-mods-past-256-kits)). Kit mods that use `ADD_KIT` are not changed and keep
+  working on rows up to 256.
+- A save with such a kit still loads without IEX, but that character's next level-up, `AddKit` or dual-class has
+  the engine bug again: mods using rows past 256 should require IEX.
+
+Tested on Windows and Linux: character creation with kits on rows 257 and 301, level-up, `AddKit` to another kit
+and back, save and reload, level-up after reload, dual-class (same result as a kit on row 249); with the feature off,
+the same kits crash (row 257, Windows) or get no abilities. Not tested yet: level drain, EET.
+
 ## Unlimited fog-of-war viewers
 
 Every party member and every clairvoyance-type viewer clears fog of war and sees creatures, however many there are.
@@ -146,6 +166,22 @@ the code differs (other build, another patch) that fix is left out and `IEX.log`
 | `negativeXPFeedback` | `AddXPObject()` with a negative value shows "The Party Has Lost Experience", as `AddExperienceParty`. |
 | `xpFloor` | XP never goes below 0 (it wrapped to the maximum). |
 | `eventTriggerObjects` | Event triggers with standard objects (`AttackedBy(PartySlot1,DEFAULT)`, `Heard(...)`) follow whoever the object names now, instead of locking on to one creature. Current EEex still has this bug. |
+
+Since 0.4.1, also fixes found by IEX's own engine analysis (not in that thread):
+
+| Name | Fix |
+|---|---|
+| `op183EffectLeak` | Opcode 183 (apply EFF if an item type is equipped) no longer leaks memory on every effect pass where no such item is equipped. (Opcode 182 had the same leak; `op182EquippedItem` covers it.) |
+| `partyXPSigned` | Party XP with a negative value (`AddExperienceParty(-1000)`, XPLIST `P_` values...) takes XP away. It gave each member about 4.3 billion / members XP when 2 or more were alive. A loss is shared rounded toward zero (-1000 over 6 members: -166 each). |
+| `op248MissingEff` | Opcode 248 (melee hit effect) with a missing EFF file and parameter 2 bit 2 no longer crashes. |
+| `partyLevelSum` | The average party level no longer wraps when the members' levels add up past 255 (ARE spawn points, the NPC level chart on area load, `AddXP2DA`). |
+| `twoDARows` | 2DA files with an indented row or a line of only spaces between rows load correctly (all rows kept; lines of spaces ignored). The engine wrote past its row arrays (crash, often later). Files without such lines load exactly as before. |
+
+Tested on Windows and Linux with each fix off and on: the opcode 182 / 183 leak (memory grew 35-135 MB a minute in
+the test, flat with the fixes), `AddExperienceParty(-1000)` with 6 members, `AddXP2DA` with a party level sum of 300,
+an indented 2DA list and an indented startup table (both crash without the fix), opcode 248 with a missing EFF
+(crash without the fix). The spawn point and NPC level chart uses of the party level are patched but were not run in
+a game.
 
 Not done: the chargen kit list bug (a generalist school flagged unusable turns the "Mage" entry into a specialist).
 
@@ -250,6 +286,7 @@ IEX has the options screen EEex mods register their tabs in (`EEex_Options_*`), 
 | IEX | Keycode Output Key | `` ` `` | Options screen |
 | IEX | Engine Fixes | 1 | [Engine fixes](#engine-fixes) |
 | IEX | Engine Fix `<name>` | 1 | Engine fixes (one key per fix) |
+| IEX | Unlimited Kits | 1 | [Unlimited kits](#unlimited-kits) |
 | EEex | Uncap FPS | 1 | Frame rate |
 | EEex | VSync Enabled | 1 | Frame rate |
 | EEex | Uncap FPS Limit Enabled | 0 | Frame rate |
@@ -270,4 +307,5 @@ Environment variables (for testing; set them before starting the game):
 | `IEX_PATHFINDING=0` / `1` | Pathfinding Redux off / on for this run. |
 | `IEX_NO_PATHFINDING=1` | Pathfinding Redux hooks not installed. |
 | `IEX_ENGINE_FIXES=0` / `1` | [Engine fixes](#engine-fixes) master switch (overrides `Baldur.lua`). |
+| `IEX_KIT_LIMIT=0` / `1` | [Unlimited kits](#unlimited-kits) off / on (overrides `Baldur.lua`). |
 | `IEX_ENGINE_FIXES_OFF=name,name` | The engine fixes named off (the per-fix `Baldur.lua` keys are then ignored). |

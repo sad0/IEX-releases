@@ -5,7 +5,7 @@ IEX gives mods the EEex Lua API under the same names, plus a few `IEX_*` functio
 1. [How EEex calls are handled](#how-eeex-calls-are-handled)
 2. [Features and detection](#features-and-detection)
 3. The `IEX_*` additions: [camera](#camera), [keys and actions](#keys-and-direct-actions),
-   [frame rate](#frame-rate), [HD area tiles](#hd-area-tiles), [class spell lists](#class-spell-lists),
+   [frame rate](#frame-rate), [HD area tiles](#hd-area-tiles), [class spell lists](#class-spell-lists), [kits](#kits),
    [fog of war](#fog-of-war-viewers), [object ids](#object-ids), [Pathfinding Redux](#pathfinding-redux),
    [native hook points](#native-hook-points), [network bridge](#loopback-network-bridge), [utilities](#utilities)
 
@@ -48,6 +48,7 @@ end
 | `IEX_Features.objectIdRecycling` | Object id recycling active. |
 | `IEX_Features.frameInterpolation` | Frame interpolation available. |
 | `IEX_Features.pathfindingRedux` | Native Pathfinding Redux policy on. |
+| `IEX_Features.kitLimit`, `IEX_KitLimit()` | [Unlimited kits](#kits) on (call sites patched). |
 | `IEX_Features.engineFixes`, `IEX_EngineFixes()` | `{ name = installed }` for each [engine fix](FEATURES.md#engine-fixes). |
 | `IEX_Features.stickHooks` | Number of StickLuaFunctions hooks IEX runs natively on this build. |
 | `IEX_Log(text)` | Writes a line to `IEX.log`. |
@@ -153,6 +154,15 @@ end
 
 Spells keep their own resref; numbered access (`Spell()` by number, `ADD_SPELL`, IDS names) stays limited to 99 per
 level.
+
+## Kits
+
+| Function / flag | Behaviour |
+|---|---|
+| `IEX_Features.kitLimit` | Engine call sites patched (2) when [unlimited kits](FEATURES.md#unlimited-kits) is on, 0 when off. |
+| `IEX_KitLimit()` -> `{installed, sites, engineSlots, maxRow, tables, why}` | `engineSlots` 256; `maxRow` 16383 (256 when off); `tables` = CLAB tables IEX loaded for rows past 256 so far; `why` = reason when off. |
+
+Nothing to call: kits on rows past 256 work like the others (`Kit()`, `AddKit`, `EEex_Sprite_GetStat(sprite, 152)`).
 
 ## Fog-of-war viewers
 

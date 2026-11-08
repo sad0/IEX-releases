@@ -6,7 +6,8 @@ run on IEX without changes to their Lua code. IEX runs on **Windows and Linux**.
 IEX is a clean-room project: it contains no code from EEex or InfinityLoader, and its authors do not read their
 sources. Only the API that mods use is reproduced, from how the mods call it and from public documentation.
 
-This repository holds the release archives and the documentation. The source code is not public.
+This repository holds the release archives and the documentation. The source code is at
+https://github.com/sad0/IEX (GPL-3.0).
 
 ## Status
 
@@ -27,16 +28,13 @@ it stays inactive and says so in `IEX.log`.
 
 Linux has been tested under WSL2 (Windows Subsystem for Linux). Native Linux desktops have not been tested yet.
 
-## What's new in 0.4.0
+## What's new in 0.4.1
 
-- **HD area tiles**: area graphics drawn at 2x, 4x or 8x resolution from HD packs, with no change to the game data.
-  See [docs/HD_PACKS.md](docs/HD_PACKS.md).
-- **Unlimited class spell lists**: mods can add any number of wizard and priest spells to the lists players pick
-  from, past the 99-per-level limit.
-- **Spell slots 51-99** become available to players (the SpellSlots companion mod, shipped in the archive).
-- **Object ids never run out**: no more "Too many objects!" crash after long sessions.
-- **Engine fixes**: 11 engine bugs fixed (opcodes 33, 182, 206/232/256, 236, weapon speed, SPLPROT, TRAPLIMT, HP
-  tables, XP, event triggers), on by default. See [docs/FEATURES.md](docs/FEATURES.md#engine-fixes).
+- **Mods that look for EEex at install now find IEX**, with no edit to the mod in most cases.
+- **Unlimited single-class kits**: KITLIST rows 257 to 16383 get their class abilities. See
+  [docs/FEATURES.md](docs/FEATURES.md#unlimited-kits).
+- **Five more engine fixes** (opcodes 183 and 248, negative party XP, party level sum, indented 2DA rows), and a memory
+  leak fixed in the 0.4.0 opcode 182 fix. On by default. See [docs/FEATURES.md](docs/FEATURES.md#engine-fixes).
 
 Full list: [CHANGELOG.md](CHANGELOG.md).
 

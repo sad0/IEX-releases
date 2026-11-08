@@ -2,6 +2,42 @@
 
 All versions are pre-releases. Games: BG2EE / EET 2.7.3, Windows x64 and Linux x64.
 
+## 0.4.1 (2026-11-08)
+
+New:
+
+- **Mods that look for EEex at install now find IEX, with no edit to the mod.** IEX core also installs an alias:
+  `EEex/EEex.tp2`, an empty component with no EEex code, listed in `WeiDU.log` as "IEX compatibility alias", plus
+  comment-only `M___EEex.lua`, `M__EEex.lua` and `EEex_*.lua` files in `override`, which IEX does not use. Checks such as
+  `MOD_IS_INSTALLED ~EEEX/EEEX.TP2~ ~0~`, `REQUIRE_COMPONENT ~EEex.tp2~ ~0~`, the `B3-EEex-Main` label and
+  `FILE_EXISTS_IN_GAME ~EEex_Actionbar.lua~` then pass. Games with an older IEX: install `IEX/IEX.tp2` component 3.
+  A real EEex folder is never overwritten. Still needing an edit: function lookups in EEex's Lua sources,
+  `lua51.dll`, `EEex.dll` ([docs/MOD_COMPAT.md](docs/MOD_COMPAT.md#install-time-checks)).
+- **Unlimited single-class kits** (`kitLimit`, on by default, Windows + Linux): single-class kits on KITLIST rows
+  257 to 16383 get their class abilities (CLAB) at character creation, level-up, `AddKit` and dual-class.
+  The engine keeps only 256 CLAB tables and reads past them for higher rows (crash or wrong abilities). No save
+  format change. `Baldur.lua` `'IEX','Unlimited Kits'` 0 turns it off; also on the Engine Fixes tab.
+  For kit mods: `IEX/lib/iex_kits.tpa` (`iex_kit_limit`) and a copy of Argent77's `ADD_KIT_EX`
+  (`IEX/lib/a7#add_kit_ex.tpa`) install kits past WeiDU's `ADD_KIT` limit. See
+  [docs/FEATURES.md](docs/FEATURES.md#unlimited-kits).
+- **Five new engine fixes** (on by default, Windows + Linux, each with its own switch on the Engine Fixes tab),
+  found by IEX's own engine analysis ([docs/FEATURES.md](docs/FEATURES.md#engine-fixes)):
+  - `op183EffectLeak`: opcode 183 (apply EFF if an item type is equipped) leaked memory on every effect pass
+    where no such item was equipped.
+  - `partyXPSigned`: `AddExperienceParty` (and every other party XP award) with a negative value gave each member
+    hundreds of millions of XP instead of a loss when 2 or more members were alive.
+  - `op248MissingEff`: opcode 248 with a missing EFF file and parameter 2 bit 2 crashed the game.
+  - `partyLevelSum`: the average party level wrapped when the levels added up past 255 (6 members of level 43+,
+    or big parties): spawn points, the NPC level chart, `AddXP2DA` and rest encounters used a far too low level
+    (rest encounters: far fewer creatures than the party's true level asks for).
+  - `twoDARows`: a 2DA file with an indented row or a line of spaces between rows corrupted memory (crash, often
+    later). Such files now load with all their rows.
+
+Fixed:
+
+- `op182EquippedItem` (0.4.0) leaked one effect object on every effect pass where the item was not equipped. It now
+  tests the item before the engine reads the EFF.
+
 ## 0.4.0 (2026-11-04)
 
 New:

@@ -64,8 +64,15 @@ bug shown with the fixes off and gone with them on, Windows and Linux).
 
 ## Install-time checks
 
-Some mods check for EEex in their installer and refuse to install without it. These checks must also accept IEX.
-The Candlekeep mod manager (coming) is meant to adapt them; if you install by hand, edit the mod's `.tp2` / `.tpa` / `.tph` files:
+Some mods check for EEex in their installer. Since 0.4.1, IEX core installs an alias (`EEex/EEex.tp2`, no EEex code,
+label `B3-EEex-Main`, plus comment-only `M___EEex.lua`, `M__EEex.lua` and `EEex_*.lua` files in `override`), so these
+pass on unmodified mods: `MOD_IS_INSTALLED ~EEex.tp2~ ~0~` in any spelling or by label, `REQUIRE_COMPONENT ~EEex.tp2~ ~0~`,
+and file checks on those Lua files. Installed for testing: Epic Thieving #600, Artisan's Kitpack (Brawler), Warlock,
+House Tweaks #48.
+
+The other checks (`FILE_CONTAINS` on an EEex Lua file, `~EEex.dll~`, `~lua51.dll~`, `~LuaProvider.dll~`) must still
+accept IEX. The Candlekeep mod manager (coming) is meant to adapt them; if you install by hand, edit the mod's
+`.tp2` / `.tpa` / `.tph` files:
 
 | The mod checks | Make it accept |
 |---|---|
@@ -78,8 +85,35 @@ Left as they are on purpose (the mod's own fallback or refusal is right under IE
 `InfinityLoader.exe`, `EEex.exe`, `EEex.db`, EEex's pattern files, `EEex_Modules.lua`, and EEex component numbers
 other than 0 (they mean different things in different EEex versions).
 
-Detection for mod authors: IEX appears in `WeiDU.log` as `~IEX/IEX.TP2~ #0 #0`; `IEX/VERSION` holds the version;
+Detection for mod authors: IEX appears in `WeiDU.log` as `~IEX/IEX.TP2~ #0 #0` (the alias makes EEex checks true too, so test IEX first if your mod must tell them apart); `IEX/VERSION` holds the version;
 at run time `IEX_Features` exists ([LUA_API.md](LUA_API.md#features-and-detection)).
+
+## Kit mods past 256 kits
+
+The engine supports 256 single-class kits (`KITLIST.2DA` rows); IEX raises that to 16383
+([FEATURES.md](FEATURES.md#unlimited-kits)). WeiDU's `ADD_KIT` still refuses a kit past row 256 (it looks for GemRB or
+ToBEx, which IEX does not pretend to be: other mods read those markers for features IEX does not have). Kit mods
+that want rows past 256 use the helper IEX installs in `IEX/lib/` and Argent77's `ADD_KIT_EX` (a public-domain copy
+ships in `IEX/lib/a7#add_kit_ex.tpa`; a mod may use its own copy):
+
+```
+OUTER_SET iex_kit_limit = 0                  // 0 = ADD_KIT_EX's own limit (256)
+ACTION_IF FILE_EXISTS ~IEX/lib/iex_kits.tpa~ BEGIN
+  INCLUDE ~IEX/lib/iex_kits.tpa~
+  LAF iex_kit_limit RET iex_kit_limit = kit_limit END    // 16383 with IEX installed
+END
+INCLUDE ~IEX/lib/a7#add_kit_ex.tpa~
+LAF ADD_KIT_EX
+  INT_VAR kit_class = 2 mixed = RESOLVE_STR_REF(@1) help = RESOLVE_STR_REF(@2) __kits_limit_override = iex_kit_limit
+  STR_VAR kit_name = ~MYKIT~ clab_path = ~mymod/kit/myclab.2da~
+  RET kit_id
+END
+```
+
+A mod whose kits can land past
+row 256 needs IEX when the game runs: `REQUIRE_PREDICATE (MOD_IS_INSTALLED ~IEX/IEX.TP2~ ~0~) ~...~`. Mods that keep
+using `ADD_KIT` are unchanged and work as before on rows up to 256. `ADD_KIT_EX` slows down as `KITLIST.2DA`
+grows (300 kits: about 30 minutes).
 
 ## Known incompatibilities and differences
 
