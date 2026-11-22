@@ -44,6 +44,8 @@ game logic keeps its normal speed (30 updates per second by default).
 | `'EEex','Uncap FPS Fullscreen VRR'` | 0. Stored and shown for EEex compatibility; IEX does not use it yet. | yes |
 | `'IEX','Frame Interpolation'` | 1 | yes |
 | `'IEX','Keep Game Speed'` | 1 | yes |
+| `'IEX','Show FPS'` | 0. 1: a small frames-per-second counter at the top right of the game screen, left of the portraits (frames actually drawn, half-second average). | yes |
+| `'IEX','Lua GC Pause'` | 400: how far Lua memory grows before the next garbage collection (200 = Lua's default). Lower uses less memory, higher less time. | no |
 | `'IEX','AI Speed'` | 30 (1-240) | yes |
 | `'IEX','Frame Rate'` | 0 = use the settings above. Any other value overrides them: frames per second, -1 = monitor refresh rate. | yes |
 
@@ -53,6 +55,12 @@ settings.
 Known limits: a few effects that the engine counts per drawn frame run at the frame rate (touch-scroll inertia, the
 area flash, menus that count frames). EEex's 'Lua GC Steps' and 'Remove Middle Mouse Scroll Multiplier' options are
 not implemented.
+
+## Creature UUIDs
+
+Every creature has a number that stays the same across saves and area changes, as under EEex
+(`EEex_Sprite_GetUUID`, see [LUA_API.md](LUA_API.md#creature-uuids)). Mods use it to remember a creature between
+sessions. Nothing to set. Saves keep their numbers when moved between EEex and IEX. Requested by Endarire.
 
 ## HD area tiles
 
@@ -278,6 +286,8 @@ IEX has the options screen EEex mods register their tabs in (`EEex_Options_*`), 
 | IEX | Frame Rate | 0 | [Frame rate](#smooth-frame-rate-and-frame-interpolation) |
 | IEX | Frame Interpolation | 1 | Frame rate |
 | IEX | Keep Game Speed | 1 | Frame rate |
+| IEX | Show FPS | 0 | Frame rate |
+| IEX | Lua GC Pause | 400 | Frame rate |
 | IEX | AI Speed | 30 | Frame rate |
 | IEX | HD Area Tiles | 1 | [HD area tiles](#hd-area-tiles) |
 | IEX | Skip Intro Movies | 0 | [Skip intro movies](#skip-intro-movies) |

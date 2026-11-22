@@ -2,6 +2,33 @@
 
 All versions are pre-releases. Games: BG2EE / EET 2.7.3, Windows x64 and Linux x64.
 
+## 0.4.2 (2026-11-22)
+
+New:
+
+- **Show FPS** (off by default, Windows + Linux): a small frames-per-second counter at the top right of the game
+  screen, left of the portraits. Options > IEX Options > Uncap FPS > "Show FPS (IEX)", or `Baldur.lua`
+  `'IEX','Show FPS'` 1. It counts the frames actually drawn, extra frames between logic updates included.
+- **Per-creature UUIDs**, as in EEex: `EEex_Sprite_GetUUID(sprite)`, `EEex_Sprite_GetFromUUID(uuid)` and
+  `EEex_Sprite_LoadedWithUUIDCallback(sourceSprite, uuid, func)`, plus the tables
+  `EEex_Sprite_Private_LoadedWithUUIDCallbacks` / `...BySource`. Every creature gets a number that stays the same
+  across saves and area changes, stored where EEex stores it (the creature's `EEEX_UUID` local, the next number in
+  the `EEEX_NEXTUUID` global), so saves move between EEex and IEX with their numbers. Copies (simulacrum, project
+  image) and summons get new numbers. Requested by Endarire. See [docs/LUA_API.md](docs/LUA_API.md#creature-uuids).
+
+Changed:
+
+- Sprite loaded listeners (`EEex_Sprite_AddLoadedListener`) now run once the creature's local variables and effect
+  list are in place, as under EEex (before, IEX ran them a little earlier, when the creature entered the object
+  list). Listeners can now read locals and marshal handler data there.
+
+Improved:
+
+- **Less slowdown with mods that run a lot of Lua on every creature, such as Tweaks Anthology.** Reading engine fields from
+  Lua is faster and the Lua garbage collector runs less often (`'IEX','Lua GC Pause'`, default 400). In one fight with
+  Tweaks Anthology and 20 creatures, IEX spent about 25% less time in effect list listeners, from 142 to 178 FPS with
+  VSync off. Most of the remaining cost is the mods' own scripts. For timing Lua code: `IEX_PerfNow()`.
+
 ## 0.4.1 (2026-11-08)
 
 New:

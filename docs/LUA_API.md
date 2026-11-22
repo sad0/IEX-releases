@@ -6,7 +6,7 @@ IEX gives mods the EEex Lua API under the same names, plus a few `IEX_*` functio
 2. [Features and detection](#features-and-detection)
 3. The `IEX_*` additions: [camera](#camera), [keys and actions](#keys-and-direct-actions),
    [frame rate](#frame-rate), [HD area tiles](#hd-area-tiles), [class spell lists](#class-spell-lists), [kits](#kits),
-   [fog of war](#fog-of-war-viewers), [object ids](#object-ids), [Pathfinding Redux](#pathfinding-redux),
+   [fog of war](#fog-of-war-viewers), [object ids](#object-ids), [creature UUIDs](#creature-uuids), [Pathfinding Redux](#pathfinding-redux),
    [native hook points](#native-hook-points), [network bridge](#loopback-network-bridge), [utilities](#utilities)
 
 Engine objects (sprites, areas, effects...) are userdata with the same field names as under EEex. Numbers are
@@ -20,7 +20,7 @@ versions: do not call them from mods.
 
 | EEex API | Under IEX |
 |---|---|
-| `EEex_*` functions, listeners, options, menus, resources, script actions / triggers / objects | Same names, same arguments and results, reimplemented by IEX (610 names, listed in `IEX/IEX_API.txt`). A mod's code runs unchanged on Windows and Linux. |
+| `EEex_*` functions, listeners, options, menus, resources, script actions / triggers / objects | Same names, same arguments and results, reimplemented by IEX (612 names, listed in `IEX/IEX_API.txt`). A mod's code runs unchanged on Windows and Linux. |
 | Engine fields (`sprite.m_baseStats...`), engine methods (`area:CheckLOS(...)`) | Same names, resolved per game build from IEX's engine descriptions, so they work on Linux too. |
 | `EEex_UDToPtr(ud)` / `EEex_PtrToUD(ptr, type)` | Provided. IEX's own equivalents: `IEX_Address(ud)` / `IEX_ToObject(address, typeName)`. |
 | `EEex_Read*` / `EEex_Write*`, `EEex_Malloc` / `EEex_Free` | Provided. Hard-coded offsets are build-specific: a Windows offset is wrong on Linux. Use field names instead. On Linux, reading an unmapped address raises a Lua error instead of crashing; near-null addresses raise an error on both systems. |
@@ -103,7 +103,8 @@ use these.
 | `IEX_SetFrameInterpolation(on)` / `IEX_GetFrameInterpolation()` -> `setting, active, framesInterpolated, movedLastFrame, snaps, mismatches` | Frame interpolation. |
 | `IEX_SetKeepGameSpeed(on)` / `IEX_GetKeepGameSpeed()` | Keep Game Speed: mods' writes to `EEex_CChitin.TIMER_UPDATES_PER_SECOND` become frame rate requests instead of speeding up the game. |
 | `IEX_GameSpeedWriters` | List of Lua chunk names whose writes do change the game speed (default `{ 'BfBotFst' }`, BuffBot's fast mode). |
-| `IEX_ApplyFrameSettings()` | Re-reads the `Baldur.lua` frame settings. |
+| `IEX_ApplyFrameSettings()` | Re-reads the `Baldur.lua` frame settings (Show FPS included). |
+| `IEX_ShowFps.on`, `IEX_ShowFps.fps` | Show FPS counter: on / off, last value counted (frames drawn per second, half-second average). Set the option with `EEex_Options_Set('IEX_Options_ShowFps', 0 or 1)`. |
 
 ## HD area tiles
 
@@ -182,6 +183,24 @@ IEX uses only bit 0 of a tile's visible bits; bits 1-14 set by the engine or a m
 |---|---|
 | `IEX_Features.objectIdRecycling` | `true` when active (single player; off with `IEX_OBJECT_IDS=0`). |
 | `IEX_ObjectIdInfo()` -> table | `active`, `adds`, `reused`, `wraps`, `nextKey`, `maxIndex`, `nextObjectId`, `deletedHead`. |
+
+## Creature UUIDs
+
+The EEex functions, same arguments, results and errors (compared with EEex 1.3.1 in the same saves):
+
+| Function | Behaviour |
+|---|---|
+| `EEex_Sprite_GetUUID(sprite)` -> number | The creature's number. Error on `nil`. |
+| `EEex_Sprite_GetFromUUID(uuid)` -> sprite or nil | The live creature with that number, in any loaded area; `nil` for an unknown number. The argument must be a number. |
+| `EEex_Sprite_LoadedWithUUIDCallback(sourceSprite, uuid, func)` | `func(sourceSprite, target)` runs at once if creature `uuid` is loaded, and again each time a creature with that number is created later (before the loaded listeners). Entries are dropped when the source creature is destroyed. Not saved. |
+| `EEex_Sprite_Private_LoadedWithUUIDCallbacks`, `EEex_Sprite_Private_LoadedWithUUIDCallbacksBySource` | The registration tables, same layout as EEex's. |
+
+Numbers are handed out in sequence. The creature's local `EEEX_UUID` holds it (`m_intValue` low 32 bits,
+`m_dWValue` high 32 bits; `sprite.m_pLocalVariables:find('EEEX_UUID')` works) and the global `EEEX_NEXTUUID` the
+last number given, both saved by the engine. A creature from an older save gets a number when it loads. A copy
+(simulacrum, project image) or a summon gets a new number. IEX extra: a creature that arrives with a number another
+loaded creature already has (a broken save) gets a new one, so numbers stay unique; an error in a callback is logged
+and the load goes on.
 
 ## Pathfinding Redux
 
@@ -269,6 +288,7 @@ For external tools (e.g. a separate renderer) talking to the game on the same ma
 | Function | Behaviour |
 |---|---|
 | `IEX_Log(text)` | A line in `IEX.log`. |
+| `IEX_PerfNow()` -> number | A high-resolution clock in microseconds (fractional), for timing Lua code. |
 | `IEX_ReadINIFile(file, section, key)` -> string or nil | A value from an INI file in the game folder (relative path, no `..`). |
 | `IEX_WriteINIFile(file, section, key, value)` -> bool | Writes it. |
 | `IEX_Address(object)` -> integer, `IEX_ToObject(address, typeName)` -> object or nil, `IEX_TypeName(object)` -> string or nil | Engine object primitives (what `EEex_UDToPtr` / `EEex_PtrToUD` use). |

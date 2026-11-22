@@ -28,13 +28,13 @@ it stays inactive and says so in `IEX.log`.
 
 Linux has been tested under WSL2 (Windows Subsystem for Linux). Native Linux desktops have not been tested yet.
 
-## What's new in 0.4.1
+## What's new in 0.4.2
 
-- **Mods that look for EEex at install now find IEX**, with no edit to the mod in most cases.
-- **Unlimited single-class kits**: KITLIST rows 257 to 16383 get their class abilities. See
-  [docs/FEATURES.md](docs/FEATURES.md#unlimited-kits).
-- **Five more engine fixes** (opcodes 183 and 248, negative party XP, party level sum, indented 2DA rows), and a memory
-  leak fixed in the 0.4.0 opcode 182 fix. On by default. See [docs/FEATURES.md](docs/FEATURES.md#engine-fixes).
+- **Show FPS**: an optional frames-per-second counter (Options > IEX Options > Uncap FPS), off by default.
+- **Per-creature UUIDs** (`EEex_Sprite_GetUUID` and co.), compatible with EEex saves. Requested by Endarire. See
+  [docs/LUA_API.md](docs/LUA_API.md#creature-uuids).
+- **Less slowdown with Lua-heavy mods** such as Tweaks Anthology (faster engine field access, Lua garbage collection
+  tuned).
 
 Full list: [CHANGELOG.md](CHANGELOG.md).
 

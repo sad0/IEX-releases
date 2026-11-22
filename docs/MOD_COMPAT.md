@@ -16,7 +16,7 @@ SadoEE), run on 2026-11-03 against the 0.4.0 code, counts what these mods use an
 | EEex opcodes 400-409 | 8 | 4 (400, 401, 402, 403; 409 through its listener) | 26 of 37 |
 | Script IDS entries (actions, triggers, objects) and data tables | 79 | 77 | 101 of 103 |
 
-IEX defines 610 EEex names in all (listed in `IEX/IEX_API.txt`). The scan is static: a name that exists can still
+IEX defines 612 EEex names in all (listed in `IEX/IEX_API.txt`). The scan is static: a name that exists can still
 behave differently, which is why the mods below were also tested in game.
 
 ## How missing calls are reported
@@ -134,4 +134,6 @@ grows (300 kits: about 30 minutes).
 - **Engine fixes**: IEX makes the fixes EEex makes ([FEATURES.md](FEATURES.md#engine-fixes)) except the chargen kit
   list one (not done yet).
 - **Engine 2.6 and BGEE / SoD alone** are not supported, so EEex mods for those games cannot use IEX.
+- **Sprite loaded listeners** (`EEex_Sprite_AddLoadedListener`) run once the creature's local variables and effect
+  list exist, as under EEex, since IEX 0.4.2 (0.4.1 and older ran them earlier, before the locals existed).
 - **Multiplayer** has not been tested.
